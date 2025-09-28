@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Truppenbauer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body{margin:0;background:#0d0b0b;font-family:Segoe UI,Arial,sans-serif;color:#f8e5c4}
+    .header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:#1a0d0e}
+    .back-btn{border:none;background:#611010;color:#fff;padding:10px 14px;border-radius:6px;cursor:pointer;font-weight:700}
+    .intro{text-align:center;padding:20px 10px;background:rgba(30,20,20,.5);font-size:18px;font-style:italic;border-bottom:1px solid #442}
+    .controls{padding:14px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;background:#1b0f10}
+    .select,.num,.btn{padding:8px 10px;border-radius:6px;border:1px solid #552;background:#241212;color:#fff;font-weight:600}
+    .btn{background:#7a0d0d;cursor:pointer}
+    .container{width:min(1200px,96%);margin:16px auto}
+    .row{background:#1c0e0f;border:1px solid #3b0f10;border-radius:10px;padding:16px;margin:14px 0}
+    .units{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    .unit{display:flex;flex-direction:column;align-items:center;gap:6px}
+    .unit img{width:70px;height:70px;object-fit:cover;border-radius:8px;border:2px solid #600}
+    table{width:100%;border-collapse:collapse;margin:14px 0;background:#1c0f10}
+    th,td{padding:8px;border-bottom:1px solid #333;text-align:center}
+    th{background:#2a1314;color:#ffd37a}
+    .total-row td{font-weight:800;background:#2c1516}
+    .remove-btn{margin-top:6px;padding:4px 8px;background:#400;border:none;color:#fff;border-radius:4px;cursor:pointer}
+    .sub-result{margin-top:12px;font-size:14px;background:#231010;padding:10px;border-radius:6px}
+  </style>
+</head>
+<body>
+  <div class="header">
+    <button class="back-btn" onclick="goBack()">← Zurück</button>
+  </div>
+
+  <div id="intro" class="intro"></div>
+
+  <div class="controls">
+    <label id="tier-label"></label>
+    <select id="tier" class="select">
+      <option value="T1">T1</option>
+      <option value="T2">T2</option>
+      <option value="T3">T3</option>
+      <option value="T4">T4</option>
+      <option value="T5">T5</option>
+    </select>
+    <button class="btn" onclick="addRow()" id="add-row"></button>
+    <label id="speed-label"></label>
+    <input id="speed" class="num" type="number" value="100" min="1" />
+    <button class="btn" onclick="calculate()" id="calc-btn"></button>
+  </div>
+
+  <div class="container">
+    <div id="rows"></div>
+    <div id="results"></div>
+  </div>
+
+<script>
+  /* Übersetzungen */
+  const translations = {
+    de: {
+      intro: "Willkommen, mein Lord. Welche Armee sollen wir für den kommenden Kampf rekrutieren?",
+      tierLabel: "Tier wählen:",
+      addRow: "+ Reihe hinzufügen",
+      speedLabel: "Training Speed (%):",
+      calcBtn: "Berechnen",
+      inf: "Infanterie", cav: "Kavallerie", spe: "Speerträger", bow: "Bogenschützen",
+      resultTitle: "Gesamtkosten",
+      rowTitle: "Reihe"
+    },
+    en: {
+      intro: "Welcome, my Lord. What army shall we recruit for the battle ahead?",
+      tierLabel: "Choose tier:",
+      addRow: "+ Add Row",
+      speedLabel: "Training Speed (%):",
+      calcBtn: "Calculate",
+      inf: "Infantry", cav: "Cavalry", spe: "Spearmen", bow: "Bowmen",
+      resultTitle: "Total Costs",
+      rowTitle: "Row"
+    }
+  };
+
+  let currentLang = "de";
+
+  function setLang(l){
+    currentLang=l;
+    const t=translations[l];
+    document.getElementById("intro").innerText=t.intro;
+    document.getElementById("tier-label").innerText=t.tierLabel;
+    document.getElementById("add-row").innerText=t.addRow;
+    document.getElementById("speed-label").innerText=t.speedLabel;
+    document.getElementById("calc-btn").innerText=t.calcBtn;
+  }
+
+  // Sprache von Hauptseite übernehmen
+  document.addEventListener("DOMContentLoaded", () => {
+    const savedLang = localStorage.getItem("lang") || "de";
+    setLang(savedLang);
+  });
+  window.addEventListener("storage",(e)=>{if(e.key==="lang"){setLang(e.newValue);}});
+
+  function goBack(){window.location.href="index.html";}
+
+  /* Ressourcen-Kosten */
+  const resourceCosts = {
+    T1: {i:{grain:30,wood:30,stone:30,iron:30,gold:0,time:15}, c:{grain:30,wood:0,stone:30,iron:30,gold:0,time:15}, s:{grain:30,wood:30,stone:30,iron:0,gold:0,time:15}, b:{grain:30,wood:30,stone:30,iron:30,gold:0,time:15}},
+    T2: {i:{grain:60,wood:60,stone:0,iron:60,gold:3,time:30}, c:{grain:60,wood:0,stone:60,iron:60,gold:3,time:30}, s:{grain:60,wood:60,stone:60,iron:0,gold:3,time:30}, b:{grain:60,wood:60,stone:60,iron:60,gold:3,time:30}},
+    T3: {i:{grain:105,wood:105,stone:0,iron:105,gold:7,time:60}, c:{grain:105,wood:0,stone:105,iron:105,gold:7,time:60}, s:{grain:105,wood:105,stone:105,iron:0,gold:7,time:60}, b:{grain:105,wood:105,stone:105,iron:105,gold:7,time:60}},
+    T4: {i:{grain:700,wood:700,stone:0,iron:700,gold:350,time:120}, c:{grain:700,wood:0,stone:700,iron:700,gold:350,time:120}, s:{grain:600,wood:600,stone:600,iron:0,gold:300,time:120}, b:{grain:700,wood:700,stone:700,iron:700,gold:350,time:120}},
+    T5: {i:{grain:800,wood:800,stone:100,iron:800,gold:400,steel:100,diamond:1,time:120}, c:{grain:800,wood:100,stone:800,iron:800,gold:400,steel:100,diamond:1,time:120}, s:{grain:700,wood:700,stone:700,iron:100,gold:350,steel:100,diamond:1,time:120}, b:{grain:800,wood:800,stone:800,iron:800,gold:400,steel:100,diamond:1,time:120}}
+  };
+
+  const powerValues = {T1:2, T2:24, T3:24, T4:36, T5:48};
+
+  const troopImages = {
+    i:"https://static.wixstatic.com/media/aa7ff4_1ae7728c1317494f86142a45edc0d34f~mv2.png",
+    c:"https://static.wixstatic.com/media/aa7ff4_c56d5b196fd649e19fc49a6ec3e31f6d~mv2.png",
+    s:"https://static.wixstatic.com/media/aa7ff4_85f27e9af79f4af0ad39503252806da4~mv2.png",
+    b:"https://static.wixstatic.com/media/aa7ff4_8773be0bcedd48ab94b392fd17a5372e~mv2.png"
+  };
+
+  function addRow(){
+    const tier=document.getElementById("tier").value;
+    const t=translations[currentLang];
+    const row=document.createElement("div");
+    row.className="row";
+    row.dataset.tier=tier;
+    row.innerHTML=`
+      <h3>${t.rowTitle} - ${tier}</h3>
+      <div class="units">
+        <div class="unit"><img src="${troopImages.i}"><span>${t.inf}</span><input type="number" class="num" data-type="i" value="0"></div>
+        <div class="unit"><img src="${troopImages.c}"><span>${t.cav}</span><input type="number" class="num" data-type="c" value="0"></div>
+        <div class="unit"><img src="${troopImages.s}"><span>${t.spe}</span><input type="number" class="num" data-type="s" value="0"></div>
+        <div class="unit"><img src="${troopImages.b}"><span>${t.bow}</span><input type="number" class="num" data-type="b" value="0"></div>
+      </div>
+      <button class="remove-btn" onclick="this.parentNode.remove()">X</button>
+      <div class="sub-result" id="sub-${Date.now()}"></div>
+    `;
+    document.getElementById("rows").appendChild(row);
+  }
+
+  function calculate(){
+    let total={grain:0,wood:0,stone:0,iron:0,gold:0,steel:0,diamond:0,time:0,power:0};
+    const speed=parseFloat(document.getElementById("speed").value)/100;
+
+    document.querySelectorAll(".row").forEach((row,index)=>{
+      let sub={grain:0,wood:0,stone:0,iron:0,gold:0,steel:0,diamond:0,time:0,power:0};
+      const tier=row.dataset.tier;
+      row.querySelectorAll("input.num").forEach(inp=>{
+        const qty=parseInt(inp.value)||0;
+        const type=inp.dataset.type;
+        if(qty>0){
+          const cost=resourceCosts[tier][type];
+          sub.grain+=qty*cost.grain;
+          sub.wood+=qty*cost.wood;
+          sub.stone+=qty*cost.stone;
+          sub.iron+=qty*cost.iron;
+          sub.gold+=qty*cost.gold;
+          sub.time+=qty*cost.time;
+          sub.power+=qty*powerValues[tier];
+          if(tier==="T5"){
+            sub.steel+=qty*cost.steel;
+            sub.diamond+=qty*cost.diamond;
+          }
+        }
+      });
+      for(const k in total){total[k]+=sub[k]||0;}
+      const adjusted=sub.time/speed;
+      row.querySelector(".sub-result").innerHTML=`
+        ${translations[currentLang].resultTitle}: 
+        Grain ${format(sub.grain)}, Wood ${format(sub.wood)}, Stone ${format(sub.stone)}, Iron ${format(sub.iron)}, Gold ${format(sub.gold)}, Steel ${format(sub.steel)}, Diamonds ${format(sub.diamond)}, Power ${format(sub.power)}, Time ${formatTime(adjusted)}
+      `;
+    });
+
+    const adjusted=total.time/speed;
+    const t=translations[currentLang];
+    document.getElementById("results").innerHTML=`
+      <h3>${t.resultTitle}</h3>
+      <table>
+        <tr><th>Grain</th><th>Wood</th><th>Stone</th><th>Iron</th><th>Gold</th><th>Steel</th><th>Diamonds</th><th>Power</th><th>Time</th></tr>
+        <tr class="total-row">
+          <td>${format(total.grain)}</td>
+          <td>${format(total.wood)}</td>
+          <td>${format(total.stone)}</td>
+          <td>${format(total.iron)}</td>
+          <td>${format(total.gold)}</td>
+          <td>${format(total.steel)}</td>
+          <td>${format(total.diamond)}</td>
+          <td>${format(total.power)}</td>
+          <td>${formatTime(adjusted)}</td>
+        </tr>
+      </table>
+    `;
+  }
+
+  function format(num){return num.toLocaleString("de-DE");}
+  function formatTime(sec){
+    const d=Math.floor(sec/86400); sec%=86400;
+    const h=Math.floor(sec/3600); sec%=3600;
+    const m=Math.floor(sec/60); sec=Math.floor(sec%60);
+    return `${d}d ${h}h ${m}m ${sec}s`;
+  }
+</script>
+</body>
+</html>
+
+
+
+

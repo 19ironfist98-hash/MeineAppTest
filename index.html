@@ -1,1 +1,211 @@
-MeineAppTest
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>WinterOfWesteros</title>
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      font-family: Arial, sans-serif;
+      color: white;
+      overflow: hidden;
+    }
+
+    .city-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background: #000;
+    }
+
+    .city-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .hotspot {
+      position: absolute;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0);
+    }
+
+    .hotspot.kaserne { left: 8%; top: 62%; width: 20%; height: 22%; }
+    .hotspot.forschung { left: 23%; top: 5%; width: 14%; height: 45%; }
+    .hotspot.bannerhalle { left: 58%; top: 42%; width: 26%; height: 36%; }
+    .hotspot.schmiede { left: 51%; top: 68%; width: 24%; height: 30%; }
+
+    .lang-switch {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      gap: 10px;
+      z-index: 2000;
+    }
+
+    .lang-switch button {
+      width: 55px;
+      height: 55px;
+      border: 2px solid #d4af37;
+      border-radius: 50%;
+      background: rgba(20,20,20,0.8);
+      color: #fff;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .lang-switch button:hover {
+      background: rgba(212,175,55,0.9);
+      color: #000;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80%;
+      max-height: 90%;
+      overflow-y: auto;
+      background: rgba(30,30,30,0.95);
+      border-radius: 10px;
+      padding: 20px;
+      z-index: 1000;
+      color: white;
+      box-shadow: 0 0 25px rgba(0,0,0,0.8);
+    }
+
+    .modal h2 { margin-top: 0; }
+
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      cursor: pointer;
+      font-size: 20px;
+      color: #ff5555;
+    }
+
+    /* Forschungs-Inhalt */
+    .research-intro {
+      font-size: 18px;
+      font-style: italic;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .research-images {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .research-images img {
+      width: 250px;
+      border-radius: 12px;
+      border: 2px solid #600;
+      box-shadow: 0 0 12px rgba(0,0,0,0.6);
+      transition: transform 0.3s;
+    }
+
+    .research-images img:hover {
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="lang-switch">
+    <button onclick="setLanguage('de')">DE</button>
+    <button onclick="setLanguage('en')">EN</button>
+  </div>
+
+  <div class="city-container">
+    <img src="https://static.wixstatic.com/media/aa7ff4_f31c04437d4a4f8f9552d8aa9f08fae4~mv2.png" alt="Stadtübersicht">
+
+    <div class="hotspot kaserne" onclick="openTroopBuilder()"></div>
+    <div class="hotspot forschung" onclick="openBuilding('forschung')"></div>
+    <div class="hotspot bannerhalle" onclick="openBuilding('bannerhalle')"></div>
+    <div class="hotspot schmiede" onclick="openBuilding('schmiede')"></div>
+  </div>
+
+  <!-- Forschungs-Modal -->
+  <div id="modal-forschung" class="modal">
+    <span class="close-btn" onclick="closeModal('forschung')">&times;</span>
+    <h2 id="forschung-title"></h2>
+    <div id="forschung-intro" class="research-intro"></div>
+    <div class="research-images">
+      <img src="https://static.wixstatic.com/media/aa7ff4_2c8df7b61f7f4a73a4dc845850eaa860~mv2.png" alt="Research 1">
+      <img src="https://static.wixstatic.com/media/aa7ff4_e5b080199f164f4bb8f21aff39aef84c~mv2.png" alt="Research 2">
+      <img src="https://static.wixstatic.com/media/aa7ff4_d712ec7785934fa0a769b2ff3b0c65c1~mv2.png" alt="Research 3">
+    </div>
+  </div>
+
+  <!-- Bannerhalle -->
+  <div id="modal-bannerhalle" class="modal">
+    <span class="close-btn" onclick="closeModal('bannerhalle')">&times;</span>
+    <h2 id="bannerhalle-title"></h2>
+    <p id="bannerhalle-text"></p>
+  </div>
+
+  <!-- Schmiede -->
+  <div id="modal-schmiede" class="modal">
+    <span class="close-btn" onclick="closeModal('schmiede')">&times;</span>
+    <h2 id="schmiede-title"></h2>
+    <p id="schmiede-text"></p>
+  </div>
+
+  <script>
+    const translations = {
+      de: {
+        forschung: {title: "Forscherturm", intro: "Wissen ist Macht, mein Lord. Welche Geheimnisse sollen wir im Turm der Forschung ergründen?"},
+        bannerhalle: {title: "Bannerhalle", text: "Hier kannst du deine Banner verwalten."},
+        schmiede: {title: "Schmiede", text: "Hier kannst du Ausrüstung herstellen."}
+      },
+      en: {
+        forschung: {title: "Research Tower", intro: "Knowledge is power, my Lord. What secrets shall we uncover in the Tower of Research?"},
+        bannerhalle: {title: "Banner Hall", text: "Here you can manage your banners."},
+        schmiede: {title: "Blacksmith", text: "Here you can forge equipment."}
+      }
+    };
+
+    let currentLang = localStorage.getItem("lang") || "de";
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      localStorage.setItem("lang", lang);
+      applyLanguage();
+    }
+
+    function applyLanguage() {
+      document.getElementById("forschung-title").innerText = translations[currentLang].forschung.title;
+      document.getElementById("forschung-intro").innerText = translations[currentLang].forschung.intro;
+      document.getElementById("bannerhalle-title").innerText = translations[currentLang].bannerhalle.title;
+      document.getElementById("bannerhalle-text").innerText = translations[currentLang].bannerhalle.text;
+      document.getElementById("schmiede-title").innerText = translations[currentLang].schmiede.title;
+      document.getElementById("schmiede-text").innerText = translations[currentLang].schmiede.text;
+    }
+
+    function openTroopBuilder() {
+      window.location.href = "troopbuilder.html";
+    }
+
+    function openBuilding(building) {
+      document.getElementById("modal-" + building).style.display = "block";
+    }
+
+    function closeModal(building) {
+      document.getElementById("modal-" + building).style.display = "none";
+    }
+
+    applyLanguage();
+  </script>
+
+</body>
+</html>
+
