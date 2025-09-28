@@ -26,7 +26,7 @@
     },
     "win": {
       "target": "nsis",
-      "icon": "build/icon.ico"
+      "icon": "cava1.ico"
     },
     "publish": "never"
   }
