@@ -1,11 +1,10 @@
 {
-  "name": "piquant-sneeze-crack-15b2t",
+  "name": "meineapp",
   "productName": "MeineApp",
   "description": "My Electron application description",
-  "keywords": [],
-  "main": "./main.js",
   "version": "1.0.0",
   "author": "denni",
+  "main": "./main.js",
   "scripts": {
     "start": "electron .",
     "dist": "electron-builder"
