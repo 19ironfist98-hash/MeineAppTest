@@ -1,16 +1,34 @@
 {
   "name": "piquant-sneeze-crack-15b2t",
-  "productName": "piquant-sneeze-crack-15b2t",
+  "productName": "MeineApp",
   "description": "My Electron application description",
   "keywords": [],
   "main": "./main.js",
   "version": "1.0.0",
   "author": "denni",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "dist": "electron-builder"
   },
   "dependencies": {},
   "devDependencies": {
-    "electron": "37.2.5"
+    "electron": "37.2.5",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.meineapp.test",
+    "productName": "MeineApp",
+    "files": [
+      "**/*"
+    ],
+    "directories": {
+      "buildResources": "build",
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "publish": "never"
   }
 }
