@@ -24,16 +24,16 @@
     },
     "win": {
       "target": "nsis",
-      "icon": "cava1 (1).ico"
+      "icon": "caval.ico"
     },
     "mac": {
       "target": "dmg",
-      "icon": "cava1.ico",
+      "icon": "caval.ico",
       "identity": null
     },
     "linux": {
       "target": "AppImage",
-      "icon": "cava1 (1).ico"
-    },
+      "icon": "caval.ico"
+    }
   }
 }
