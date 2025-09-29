@@ -24,7 +24,7 @@
     },
     "win": {
       "target": "nsis",
-      "icon": "cava1.ico"
+      "icon": "cava1 (1).ico"
     },
     "mac": {
       "target": "dmg",
@@ -33,8 +33,7 @@
     },
     "linux": {
       "target": "AppImage",
-      "icon": "cava1.ico"
+      "icon": "cava1 (1).ico"
     },
-    "publish": "never"
   }
 }
